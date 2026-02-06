@@ -3,10 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>RAG Chat — FastAPI • Pandas • Docker</title>
+  <title>RAG Chat — Multi‑PDF</title>
   <link rel="stylesheet" href="/static/style.css" />
 </head>
-
 <body>
   <div class="bg"></div>
 
@@ -15,54 +14,67 @@
       <div class="logo">R</div>
       <div class="brand-text">
         <div class="title">RAG Multi‑PDF Chat</div>
-        <div class="subtitle">FastAPI • Pandas • Docker</div>
+        <div class="subtitle">FastAPI • Pandas • Docker • Upload PDF</div>
       </div>
     </div>
-
-    <div class="pill">
-      <span class="dot"></span>
-      <span>API online</span>
-    </div>
+    <div class="pill"><span class="dot"></span><span>API online</span></div>
   </header>
 
   <main class="shell">
     <section class="panel left">
-      <h2>Settings</h2>
+      <h2>Mode</h2>
 
       <div class="card">
-        <label class="label">Sources</label>
-        <div class="chips" id="chips">
-          <button class="chip active" data-source="fastapi">FastAPI</button>
-          <button class="chip active" data-source="pandas">Pandas</button>
-          <button class="chip active" data-source="docker">Docker</button>
-        </div>
-
-        <div class="row">
-          <div class="col">
-            <label class="label" for="topk">Top‑K</label>
-            <input id="topk" type="range" min="3" max="12" value="8" />
-            <div class="muted"><span id="topkVal">8</span> passages</div>
+        <div class="section">
+          <label class="label">Choose chat mode</label>
+          <div class="chips" id="modeChips">
+            <button class="chip active" data-mode="base" type="button">Base (3 PDFs)</button>
+            <button class="chip" data-mode="upload" type="button">Uploaded PDF</button>
           </div>
         </div>
 
         <div class="hr"></div>
 
-        <div class="muted">
-          Tips:
-          <ul>
-            <li>Ask “How to …” questions</li>
-            <li>Use one source to be precise</li>
-            <li>Check citations for pages</li>
-          </ul>
+        <div id="baseSettings" class="section">
+          <label class="label">Sources (Base)</label>
+          <div class="chips" id="chips">
+            <button class="chip active" data-source="fastapi" type="button">FastAPI</button>
+            <button class="chip active" data-source="pandas" type="button">Pandas</button>
+            <button class="chip active" data-source="docker" type="button">Docker</button>
+          </div>
+        </div>
+
+        <div id="uploadSettings" class="section hidden">
+          <label class="label">Upload a PDF</label>
+
+          <div class="file-row">
+            <input id="pdfFile" class="file" type="file" accept="application/pdf" />
+            <button id="uploadBtn" class="btn" type="button">Upload & Index</button>
+          </div>
+
+          <div class="muted" style="margin-top:10px">
+            Current doc_id: <span id="docId">none</span>
+          </div>
+          <div class="muted">
+            Note: upload indexing is text-only (no OCR). Scanned PDFs may fail.
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="section">
+          <label class="label" for="topk">Top‑K</label>
+          <input id="topk" type="range" min="3" max="12" value="8" />
+          <div class="muted"><span id="topkVal">8</span> passages</div>
         </div>
       </div>
 
       <div class="card">
         <h3>Example questions</h3>
         <div class="examples">
-          <button class="example">How do I create a POST endpoint with Pydantic validation in FastAPI?</button>
-          <button class="example">How do I use groupby with multiple columns in Pandas?</button>
-          <button class="example">What is the difference between docker run and docker compose?</button>
+          <button class="example" type="button">How do I create a POST endpoint with request validation in FastAPI?</button>
+          <button class="example" type="button">How do I groupby multiple columns in Pandas?</button>
+          <button class="example" type="button">What is the difference between docker run and docker compose?</button>
         </div>
       </div>
     </section>
@@ -77,21 +89,21 @@
         <div id="messages" class="messages">
           <div class="msg bot">
             <div class="bubble">
-              Ask me anything about your 3 PDFs. I’ll answer with citations (PDF + page).
+              Upload a PDF or use the base PDFs, then ask a question. I will cite sources (PDF + page).
             </div>
           </div>
         </div>
 
         <div class="composer">
           <textarea id="q" rows="1" placeholder="Type your question…"></textarea>
-          <button id="send" class="send">
+          <button id="send" class="send" type="button">
             <span id="sendText">Send</span>
             <span id="spinner" class="spinner hidden"></span>
           </button>
         </div>
 
         <div class="footnote">
-          Responses are generated by Gemini using retrieved PDF passages. Always verify citations.
+          Answers are generated by Groq LLM using retrieved PDF passages. Always verify citations.
         </div>
       </div>
 

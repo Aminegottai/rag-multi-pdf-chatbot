@@ -1,17 +1,53 @@
-# secrets
+# =========================
+# Secrets
+# =========================
 .env
+.env.*
+!.env.example
 
-# python
+# =========================
+# Python
+# =========================
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
 .venv/
 venv/
+ENV/
+env/
 
-# data / index (à décider)
-data/pdfs/
-index/
-data/processed/
+# Jupyter
+.ipynb_checkpoints/
 
-# OS
+# =========================
+# OS / Editors
+# =========================
 .DS_Store
 Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# =========================
+# Project outputs (generated)
+# =========================
+# FAISS index + metadata (rebuildable)
+index/
+
+# Processed data (rebuildable)
+data/processed/
+
+# User uploaded PDFs + their indexes (runtime)
+uploads/
+
+# Raw PDFs (often large/licensed) - keep empty folder tracked with placeholder if needed
+data/pdfs/*.pdf
+
+# Logs
+*.log
