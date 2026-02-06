@@ -1,0 +1,17 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# data / index (à décider)
+data/pdfs/
+index/
+data/processed/
+
+# OS
+.DS_Store
+Thumbs.db
