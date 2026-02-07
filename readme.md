@@ -1,11 +1,14 @@
 # RAG Multi‑PDF Chatbot (FastAPI + FAISS + OCR + Groq)
 
-Un chatbot RAG (Retrieval‑Augmented Generation) qui répond aux questions à partir de **3 PDFs** (FastAPI, Pandas, Docker), avec :
-- extraction texte + **OCR** (pour code en image),
-- découpage en chunks,
-- embeddings + **FAISS** (recherche sémantique),
-- génération de réponse via **Groq API** (LLM),
-- citations (PDF + page),
+Un chatbot **RAG** (Retrieval‑Augmented Generation) qui répond aux questions à partir de :
+- **Base (3 PDFs)** : FastAPI, Pandas, Docker (indexés en local)
+- **Mode Upload** : l’utilisateur peut uploader **son propre PDF** et poser des questions dessus
+
+Fonctionne avec :
+- extraction texte + **OCR** (pour les 3 PDFs de base),
+- embeddings + **FAISS**,
+- génération via **Groq API** (LLM),
+- **citations** (PDF + page),
 - interface web (HTML/CSS/JS) servie par **FastAPI**.
 
 ---
@@ -17,7 +20,7 @@ Un chatbot RAG (Retrieval‑Augmented Generation) qui répond aux questions à p
 - [Prérequis](#prérequis)
 - [Installation](#installation)
 - [Configuration des clés API](#configuration-des-clés-api)
-- [Pipeline (build index)](#pipeline-build-index)
+- [Construire l’index (Base: 3 PDFs)](#construire-lindex-base-3-pdfs)
 - [Lancer l’application](#lancer-lapplication)
 - [Utiliser l’API](#utiliser-lapi)
 - [Interface Web](#interface-web)
@@ -28,51 +31,73 @@ Un chatbot RAG (Retrieval‑Augmented Generation) qui répond aux questions à p
 ---
 
 ## Fonctionnalités
- Ingestion de PDFs (texte sélectionnable)  
- OCR des pages “image” (code capturé en image) avec Tesseract  
- Chunking + metadata (source/pdf/page)  
- Embeddings `sentence-transformers/all-MiniLM-L6-v2`  
- Index vectoriel FAISS (cosine similarity)  
- Endpoint FastAPI `/chat` qui:
-- récupère les chunks pertinents,
-- construit un prompt “grounded”,
-- appelle un LLM via **Groq**,
-- renvoie réponse + citations
+### Mode Base (3 PDFs)
+- Extraction du texte + **OCR** (Tesseract) pour le code en image
+- Chunking + metadata (source/pdf/page)
+- Embeddings : `sentence-transformers/all-MiniLM-L6-v2`
+- Index vectoriel : **FAISS** (cosine similarity)
+- Endpoint `/chat` :
+  - retrieval top‑K passages
+  - prompt “grounded”
+  - appel Groq LLM
+  - réponse + citations (PDF + page)
 
- Page d’accueil “chat” design (frontend statique)
-
-
-## Architecture
-
-### Flux offline (préparation des données)
-`PDFs` → `extract_ocr.py` → `pages.jsonl`  
-`pages.jsonl` → `chunk.py` → `chunks.jsonl`  
-`chunks.jsonl` → `build_index.py` → `index/faiss.index + index/meta.json`
-
-### Flux online (chat)
-Question utilisateur → embeddings → FAISS topK → prompt avec contexte → Groq LLM → réponse + citations
+### Mode Upload (PDF utilisateur)
+- Endpoint `/upload` :
+  - upload PDF
+  - création d’un index FAISS **par document**
+  - retourne un `doc_id`
+- Endpoint `/chat_doc` :
+  - répond **uniquement** à partir du PDF uploadé (via `doc_id`)
+- Remarque : le mode Upload est **text-only (sans OCR)** par défaut (les PDFs scannés peuvent échouer).
 
 ---
 
-## Structure du projet 
+## Architecture
 
+### Flux offline (Base: 3 PDFs)
+`data/pdfs/*.pdf` → `extract_ocr.py` → `data/processed/pages.jsonl`  
+`pages.jsonl` → `chunk.py` → `data/processed/chunks.jsonl`  
+`chunks.jsonl` → `build_index.py` → `index/faiss.index + index/meta.json`
+
+### Flux online (chat)
+Question → embeddings → FAISS top‑K → prompt + contexte → Groq LLM → réponse + citations
+
+### Flux online (upload)
+Upload PDF → build index FAISS → `doc_id`  
+Question + `doc_id` → retrieval → Groq LLM → réponse + citations
+
+---
+
+
+## Structure du projet
+```text
 rag-multi-pdf-chatbot/
 ├─ README.md
 ├─ requirements.txt
+├─ .env.example
 ├─ .env                     
 │
+├─ assets/
+│  └─ screenshots/
+│     ├─ home.png
+│     ├─ rep.png
+│     └─ Mode.png
+│
 ├─ data/
-│  ├─ pdfs/
+│  ├─ pdfs/                  
 │  │  ├─ fastapi.pdf
 │  │  ├─ pandas.pdf
 │  │  └─ docker.pdf
-│  └─ processed/
+│  └─ processed/         
 │     ├─ pages.jsonl
 │     └─ chunks.jsonl
 │
-├─ index/
+├─ index/                    
 │  ├─ faiss.index
 │  └─ meta.json
+│
+├─ uploads/                
 │
 └─ src/
    ├─ extract_ocr.py
@@ -85,14 +110,13 @@ rag-multi-pdf-chatbot/
       │  └─ app.js
       └─ templates/
          └─ index.html
-## Interface
+```
 
-### Page d’accueil
+## Page d’accueil
 ![Home](assets/screenshots/home.png)
 
-### Chat + citations
+## Chat + citations
 ![Chat](assets/screenshots/rep.png)
 
-### Settings
-![Chat](assets/screenshots/settings.png)
-
+## Mode
+![Chat](assets/screenshots/Mode.png)
